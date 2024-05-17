@@ -1,23 +1,60 @@
 using Authorize.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Authenticate.Context
 {
 
-    public class AuthorizeContextDb(DbContextOptions<AuthorizeContextDb> option) : DbContext(option)
+    public class AuthorizeContextDb : DbContext
     {
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<RoleResource> RolesResources { get; set; }
         public DbSet<Permission> Permissions { get; set; }
 
+        public AuthorizeContextDb(DbContextOptions<AuthorizeContextDb> option) : base(option)
+        {
+            try
+            {
+                var dbCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
+                if (dbCreator != null)
+                {
+                    if(!dbCreator.CanConnect()) dbCreator.Create();
+                    if(!dbCreator.HasTables()) dbCreator.CreateTables();
+                } 
+            }   
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // modelBuilder.Entity<User>()
-            //     .HasOne(e => e.Organization)
-            //     .WithMany(e => e.Users)
-            //     .HasForeignKey(e => e.OrganizationId)
-            //     .IsRequired();
+            modelBuilder.Entity<Permission>()
+                .HasOne(e => e.Role)
+                .WithMany(e => e.Permissions)
+                .HasForeignKey(e => e.RoleId)
+                .IsRequired();
+
+            modelBuilder.Entity<Permission>()
+                .HasOne(e => e.Resource)
+                .WithMany(e => e.Permissions)
+                .HasForeignKey(e => e.ResourceId)
+                .IsRequired();
+
+            modelBuilder.Entity<RoleResource>()
+                .HasOne(e => e.Resource)
+                .WithMany(e => e.RolesResources)
+                .HasForeignKey(e => e.ResourceId)
+                .IsRequired();
+
+            modelBuilder.Entity<RoleResource>()
+                .HasOne(e => e.Role)
+                .WithMany(e => e.RolesResources)
+                .HasForeignKey(e => e.RoleId)
+                .IsRequired();
         }
     }
 
