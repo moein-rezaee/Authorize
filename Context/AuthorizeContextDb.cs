@@ -10,7 +10,6 @@ namespace Authenticate.Context
     {
         public DbSet<Resource> Resources { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<RoleResource> RolesResources { get; set; }
         public DbSet<Permission> Permissions { get; set; }
 
         public AuthorizeContextDb(DbContextOptions<AuthorizeContextDb> option) : base(option)
@@ -42,18 +41,6 @@ namespace Authenticate.Context
                 .HasOne(e => e.Resource)
                 .WithMany(e => e.Permissions)
                 .HasForeignKey(e => e.ResourceId)
-                .IsRequired();
-
-            modelBuilder.Entity<RoleResource>()
-                .HasOne(e => e.Resource)
-                .WithMany(e => e.RolesResources)
-                .HasForeignKey(e => e.ResourceId)
-                .IsRequired();
-
-            modelBuilder.Entity<RoleResource>()
-                .HasOne(e => e.Role)
-                .WithMany(e => e.RolesResources)
-                .HasForeignKey(e => e.RoleId)
                 .IsRequired();
         }
     }
