@@ -18,6 +18,7 @@ namespace MyApp.Namespace
         private IValidator<AddResourceDto> _addValidator { get; init; } = addValidator;
         private IValidator<EditResourceDto> _editValidator { get; init; } = editValidator;
 
+        [HttpGet]
         public IActionResult Get()
         {
             Result result;
@@ -34,6 +35,7 @@ namespace MyApp.Namespace
             }
         }
 
+        [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
             Result result;
@@ -119,6 +121,7 @@ namespace MyApp.Namespace
         }
 
 
+        [HttpDelete]
         public IActionResult Delete(Guid id)
         {
             Result result;

@@ -10,6 +10,6 @@ namespace Authorize.Entities
         public required Guid ResourceId { get; set; }
         public Resource? Resource { get; set; }
 
-        public required MthodesTypes Method { get; set; } = MthodesTypes.GET; 
+        public required MethodsTypes Method { get; set; } = MethodsTypes.GET; 
     }
 }

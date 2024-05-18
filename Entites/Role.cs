@@ -5,7 +5,6 @@ namespace Authorize.Entities
         public required Guid OrganizationId { get; set; }
         public required string Name { get; set; }
         
-        public ICollection<RoleResource>? RolesResources { get; set; }
         public ICollection<Permission>? Permissions { get; set; }
     }
 }

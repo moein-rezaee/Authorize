@@ -6,6 +6,5 @@ namespace Authorize.Entities
         public required string Url { get; set; }
         
         public ICollection<Permission>? Permissions { get; set; }
-        public ICollection<RoleResource>? RolesResources { get; set; }
     }
 }
