@@ -83,5 +83,17 @@ namespace Authorize.Common
             Data = data,
             Status = false
         };
+
+        public static Result Unauthorized(object? data = null) => new()
+        {
+            Message = new()
+            {
+                Fa = "درخواست غیرمجاز. شما متاسفانه به این منبع دسترسی ندارید!",
+                En = "Unauthorized"
+            },
+            Data = data,
+            Status = false,
+            StatusCode = StatusCodes.Status401Unauthorized
+        };
     }
 }

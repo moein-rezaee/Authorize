@@ -36,7 +36,7 @@ namespace Authorize.Common
             StatusCode = StatusCodes.Status201Created,
             Data = data
         };
-        
+
         public static Result EditRecordOk(object? data = null) => new()
         {
             Message = new()
@@ -58,6 +58,17 @@ namespace Authorize.Common
             },
             StatusCode = StatusCodes.Status200OK,
             Data = data
+        };
+
+        public static Result UserIsValid(object? data = null) => new()
+        {
+            Message = new()
+            {
+                Fa = "کاربر معتبر می باشد",
+                En = "َUser Is Valid"
+            },
+            Data = data,
+            StatusCode = StatusCodes.Status401Unauthorized
         };
     }
 }

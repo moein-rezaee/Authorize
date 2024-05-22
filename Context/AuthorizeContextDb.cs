@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace Authenticate.Context
+namespace Authorize.Context
 {
 
     public class AuthorizeContextDb : DbContext

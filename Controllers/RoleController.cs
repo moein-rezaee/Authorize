@@ -1,4 +1,4 @@
-using Authenticate.Context;
+using Authorize.Context;
 using Authorize.Common;
 using Authorize.DTOs;
 using Authorize.Entities;

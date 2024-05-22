@@ -1,5 +1,7 @@
 using System.Reflection;
-using Authenticate.Context;
+using Authorize.Context;
+using Authorize.Interfaces;
+using Authorize.Repositories;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +20,7 @@ var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? defName;
 var dbPass = Environment.GetEnvironmentVariable("DB_SA_PASSWORD") ?? defPass;
 var connectionString = $"Server={dbHost}; Persist Security Info=False; TrustServerCertificate=true; User ID=sa;Password={dbPass};Initial Catalog={dbName};";
 builder.Services.AddDbContext<AuthorizeContextDb>(options => options.UseSqlServer(connectionString));
+builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

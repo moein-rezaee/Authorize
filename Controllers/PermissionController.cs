@@ -1,4 +1,4 @@
-using Authenticate.Context;
+using Authorize.Context;
 using Authorize.Common;
 using Authorize.DTOs;
 using Authorize.Entities;
@@ -7,16 +7,24 @@ using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Authorize.Services;
+using Authorize.Interfaces;
 
-namespace MyApp.Namespace
+namespace Authorize.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class PermissionController(AuthorizeContextDb db, IValidator<AddPermissionDto> addValidator, IValidator<EditPermissionDto> editValidator) : ControllerBase
+    public class PermissionController(
+        IUnitOfWorkRepository db,
+        IValidator<CheckPermissionDto> validator,
+        IValidator<AddPermissionDto> addValidator,
+        IValidator<EditPermissionDto> editValidator) : ControllerBase
     {
-        private AuthorizeContextDb _db { get; init; } = db;
+        private IUnitOfWorkRepository _db { get; init; } = db;
+        private IValidator<CheckPermissionDto> _validator { get; init; } = validator;
         private IValidator<AddPermissionDto> _addValidator { get; init; } = addValidator;
         private IValidator<EditPermissionDto> _editValidator { get; init; } = editValidator;
+        private PermissionService _service { get; init; } = new(db);
 
         [HttpGet]
         public IActionResult Get()
@@ -41,7 +49,7 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Permissions.FirstOrDefault(i => i.Id == id);
+                var founded = _db.Permissions.Find(id);
                 if (founded is null)
                 {
                     result = CustomErrors.RecordNotFaound();
@@ -60,6 +68,39 @@ namespace MyApp.Namespace
         }
 
         [HttpPost]
+        [Route("[controller]/[action]")]
+        public IActionResult Check(CheckPermissionDto dto)
+        {
+            Result result;
+            try
+            {
+                var check = _validator.Validate(dto);
+                if (!check.IsValid)
+                {
+                    result = CustomErrors.InvalidData(check.Errors);
+                }
+
+
+                bool hasPermission = _service.Check(dto);
+                if (hasPermission)
+                {
+                    result = CustomResults.UserIsValid();
+                }
+                else
+                {
+                    result = CustomErrors.Unauthorized();
+                }
+
+                return StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                result = CustomErrors.AddRecordFailed();
+                return StatusCode(result.StatusCode, result);
+            }
+        }
+
+        [HttpPost]
         public IActionResult Add(AddPermissionDto dto)
         {
             Result result;
@@ -73,8 +114,7 @@ namespace MyApp.Namespace
 
                 Permission item = dto.Adapt<Permission>();
                 _db.Permissions.Add(item);
-                _db.SaveChanges();
-                
+
                 result = CustomResults.AddRecordOk(item.Id);
                 return StatusCode(result.StatusCode, result);
             }
@@ -98,17 +138,15 @@ namespace MyApp.Namespace
                 }
 
                 Permission item = dto.Adapt<Permission>();
-                var founded = _db.Permissions.FirstOrDefault(i => i.Id == item.Id);
+                bool isOk = _db.Permissions.Edit(item);
 
-                if (founded is null)
+                if (isOk)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomResults.EditRecordOk();
                 }
                 else
                 {
-                    _db.Permissions.Update(item);
-                    _db.SaveChanges();
-                    result = CustomResults.EditRecordOk();
+                    result = CustomErrors.RecordNotFaound();
                 }
 
                 return StatusCode(result.StatusCode, result);
@@ -127,14 +165,14 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Permissions.FirstOrDefaultAsync(i => i.Id == id);
-                if (founded is null)
+                var isOk = _db.Permissions.Delete(id);
+                if (isOk)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomResults.DeleteRecordOk();
                 }
                 else
                 {
-                    result = CustomResults.DeleteRecordOk();
+                    result = CustomErrors.RecordNotFaound();
                 }
                 return StatusCode(result.StatusCode, result);
             }
@@ -147,3 +185,4 @@ namespace MyApp.Namespace
 
     }
 }
+
