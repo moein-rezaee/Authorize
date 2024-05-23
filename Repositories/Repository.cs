@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Authorize.Context;
 using Authorize.Interfaces;
 using Extentions;
+using Mapster;
 
 namespace Authorize.Repositories
 {
@@ -19,7 +20,7 @@ namespace Authorize.Repositories
             _db.Set<TEntity>().Add(item);
         }
 
-        public bool Edit(TEntity item)
+        public bool Edit<TDto>(TDto item) where TDto: class
         {
             Guid id = item.GetIdAsGuid();
             TEntity? entity = Find(id);
@@ -27,7 +28,7 @@ namespace Authorize.Repositories
             {   
                 return false;
             }
-            entity = item;
+            entity = item.Adapt<TEntity>();
             _db.Set<TEntity>().Update(entity);
             return true;
         }

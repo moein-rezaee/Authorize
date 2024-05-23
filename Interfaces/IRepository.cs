@@ -9,7 +9,7 @@ namespace Authorize.Interfaces
         TEntity? Find(Expression<Func<TEntity, bool>> condition);
         bool Any(Expression<Func<TEntity, bool>> condition);
         void Add(TEntity item);
-        bool Edit(TEntity item);
+        bool Edit<TDto>(TDto item) where TDto: class;
         bool Delete(Guid id);
     }
 }

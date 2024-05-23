@@ -1,4 +1,3 @@
-using Authorize.Context;
 using Authorize.Common;
 using Authorize.DTOs;
 using Authorize.Entities;
@@ -6,15 +5,20 @@ using Authorize.Models;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Authorize.Interfaces;
 
 namespace MyApp.Namespace
 {
     [Route("[controller]")]
     [ApiController]
-    public class ResourceController(AuthorizeContextDb db, IValidator<AddResourceDto> addValidator, IValidator<EditResourceDto> editValidator) : ControllerBase
+    public class ResourceController(
+        IUnitOfWorkRepository db,
+        ILogger<ResourceController> logger,
+        IValidator<AddResourceDto> addValidator,
+        IValidator<EditResourceDto> editValidator) : ControllerBase
     {
-        private AuthorizeContextDb _db { get; init; } = db;
+        private IUnitOfWorkRepository _db { get; init; } = db;
+        private ILogger<ResourceController> _logger { get; init; } = logger;
         private IValidator<AddResourceDto> _addValidator { get; init; } = addValidator;
         private IValidator<EditResourceDto> _editValidator { get; init; } = editValidator;
 
@@ -24,12 +28,13 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Resources.ToList();
-                result = CustomResults.GetRecordsOk(founded);
+                var found = _db.Resources.ToList();
+                result = CustomResults.GetRecordsOk(found);
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.GetRecordsFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -41,19 +46,20 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Resources.FirstOrDefault(i => i.Id == id);
-                if (founded is null)
+                var found = _db.Resources.Find(id);
+                if (found is null)
                 {
                     result = CustomErrors.RecordNotFaound();
                 }
                 else
                 {
-                    result = CustomResults.GetRecordOk(founded);
+                    result = CustomResults.GetRecordOk(found);
                 }
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.GetRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -69,17 +75,19 @@ namespace MyApp.Namespace
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
                 Resource item = dto.Adapt<Resource>();
                 _db.Resources.Add(item);
-                _db.SaveChanges();
-                
+                _db.Save();
+
                 result = CustomResults.AddRecordOk(item.Id);
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.AddRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -95,26 +103,26 @@ namespace MyApp.Namespace
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
-                Resource item = dto.Adapt<Resource>();
-                var founded = _db.Resources.FirstOrDefault(i => i.Id == item.Id);
+                bool isOk = _db.Resources.Edit(dto);
+                _db.Save();
 
-                if (founded is null)
+                if (isOk)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomResults.EditRecordOk();
                 }
                 else
                 {
-                    _db.Resources.Update(item);
-                    _db.SaveChanges();
-                    result = CustomResults.EditRecordOk();
+                    result = CustomErrors.RecordNotFaound();
                 }
 
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.EditRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -127,8 +135,9 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Resources.FirstOrDefaultAsync(i => i.Id == id);
-                if (founded is null)
+                bool isOk = _db.Resources.Delete(id);
+                _db.Save();
+                if (isOk)
                 {
                     result = CustomErrors.RecordNotFaound();
                 }
@@ -140,6 +149,7 @@ namespace MyApp.Namespace
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.DeleteRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }

@@ -7,14 +7,20 @@ using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Authorize.Interfaces;
 
 namespace MyApp.Namespace
 {
     [Route("[controller]")]
     [ApiController]
-    public class RoleController(AuthorizeContextDb db, IValidator<AddRoleDto> addValidator, IValidator<EditRoleDto> editValidator) : ControllerBase
+    public class RoleController(
+        IUnitOfWorkRepository db,
+        ILogger<RoleController> logger,
+        IValidator<AddRoleDto> addValidator,
+        IValidator<EditRoleDto> editValidator) : ControllerBase
     {
-        private AuthorizeContextDb _db { get; init; } = db;
+        private IUnitOfWorkRepository _db { get; init; } = db;
+        private ILogger<RoleController> _logger { get; init; } = logger;
         private IValidator<AddRoleDto> _addValidator { get; init; } = addValidator;
         private IValidator<EditRoleDto> _editValidator { get; init; } = editValidator;
 
@@ -24,12 +30,13 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Roles.ToList();
-                result = CustomResults.GetRecordsOk(founded);
+                var found = _db.Roles.ToList();
+                result = CustomResults.GetRecordsOk(found);
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.GetRecordsFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -41,19 +48,20 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Roles.FirstOrDefault(i => i.Id == id);
-                if (founded is null)
+                var found = _db.Roles.Find(id);
+                if (found is null)
                 {
                     result = CustomErrors.RecordNotFaound();
                 }
                 else
                 {
-                    result = CustomResults.GetRecordOk(founded);
+                    result = CustomResults.GetRecordOk(found);
                 }
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.GetRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -69,17 +77,19 @@ namespace MyApp.Namespace
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
                 Role item = dto.Adapt<Role>();
                 _db.Roles.Add(item);
-                _db.SaveChanges();
-                
+                _db.Save();
+
                 result = CustomResults.AddRecordOk(item.Id);
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.AddRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -95,26 +105,25 @@ namespace MyApp.Namespace
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
-                Role item = dto.Adapt<Role>();
-                var founded = _db.Roles.FirstOrDefault(i => i.Id == item.Id);
-
-                if (founded is null)
+                bool isOk = _db.Roles.Edit(dto);
+                _db.Save();
+                if (isOk)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomResults.EditRecordOk();
                 }
                 else
                 {
-                    _db.Roles.Update(item);
-                    _db.SaveChanges();
-                    result = CustomResults.EditRecordOk();
+                    result = CustomErrors.RecordNotFaound();
                 }
 
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.EditRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -127,19 +136,20 @@ namespace MyApp.Namespace
             Result result;
             try
             {
-                var founded = _db.Roles.FirstOrDefaultAsync(i => i.Id == id);
-                if (founded is null)
+                bool isOk = _db.Roles.Delete(id);
+                if (isOk)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomResults.DeleteRecordOk();
                 }
                 else
                 {
-                    result = CustomResults.DeleteRecordOk();
+                    result = CustomErrors.RecordNotFaound();
                 }
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogDebug(ex.Message, ex);
                 result = CustomErrors.DeleteRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }

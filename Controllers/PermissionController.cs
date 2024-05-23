@@ -1,4 +1,3 @@
-using Authorize.Context;
 using Authorize.Common;
 using Authorize.DTOs;
 using Authorize.Entities;
@@ -9,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Authorize.Services;
 using Authorize.Interfaces;
-using Newtonsoft.Json;
 using NuGet.Protocol;
 
 namespace Authorize.Controllers
@@ -36,8 +34,8 @@ namespace Authorize.Controllers
             Result result;
             try
             {
-                var founded = _db.Permissions.ToList();
-                result = CustomResults.GetRecordsOk(founded);
+                var found = _db.Permissions.ToList();
+                result = CustomResults.GetRecordsOk(found);
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
@@ -54,14 +52,14 @@ namespace Authorize.Controllers
             Result result;
             try
             {
-                var founded = _db.Permissions.Find(id);
-                if (founded is null)
+                var found = _db.Permissions.Find(id);
+                if (found is null)
                 {
                     result = CustomErrors.RecordNotFaound();
                 }
                 else
                 {
-                    result = CustomResults.GetRecordOk(founded);
+                    result = CustomResults.GetRecordOk(found);
                 }
                 return StatusCode(result.StatusCode, result);
             }
@@ -149,8 +147,7 @@ namespace Authorize.Controllers
                     return StatusCode(result.StatusCode, result);
                 }
 
-                Permission item = dto.Adapt<Permission>();
-                bool isOk = _db.Permissions.Edit(item);
+                bool isOk = _db.Permissions.Edit(dto);
                 _db.Save();
 
                 if (isOk)
