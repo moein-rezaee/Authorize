@@ -16,7 +16,6 @@ public class AddPermissionValidator : AbstractValidator<AddPermissionDto>
             .NotNull();
 
         RuleFor(i => i.Method)
-            .NotEmpty()
             .NotNull();
     }
 

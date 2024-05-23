@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using Authorize.Context;
-using Authorize.Entities;
 using Authorize.Interfaces;
 using Extentions;
 
@@ -15,11 +14,9 @@ namespace Authorize.Repositories
         public TEntity? Find(Guid id) => _db.Set<TEntity>().Find(id);
         public TEntity? Find(Expression<Func<TEntity, bool>> expression) => _db.Set<TEntity>().Find(expression);
 
-        public Guid Add(TEntity item)
+        public void Add(TEntity item)
         {
             _db.Set<TEntity>().Add(item);
-            _db.SaveChanges();
-            return item.GetIdAsGuid();
         }
 
         public bool Edit(TEntity item)
@@ -32,7 +29,6 @@ namespace Authorize.Repositories
             }
             entity = item;
             _db.Set<TEntity>().Update(entity);
-            _db.SaveChanges();
             return true;
         }
 
@@ -44,7 +40,6 @@ namespace Authorize.Repositories
                 return false;
             }
             _db.Set<TEntity>().Remove(entity);
-            _db.SaveChanges();
             return true;
         }
 

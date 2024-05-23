@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Authorize.Services;
 using Authorize.Interfaces;
+using Newtonsoft.Json;
+using NuGet.Protocol;
 
 namespace Authorize.Controllers
 {
@@ -16,11 +18,13 @@ namespace Authorize.Controllers
     [ApiController]
     public class PermissionController(
         IUnitOfWorkRepository db,
+        ILogger<PermissionController> logger,
         IValidator<CheckPermissionDto> validator,
         IValidator<AddPermissionDto> addValidator,
         IValidator<EditPermissionDto> editValidator) : ControllerBase
     {
         private IUnitOfWorkRepository _db { get; init; } = db;
+        private ILogger<PermissionController> _logger { get; init; } = logger;
         private IValidator<CheckPermissionDto> _validator { get; init; } = validator;
         private IValidator<AddPermissionDto> _addValidator { get; init; } = addValidator;
         private IValidator<EditPermissionDto> _editValidator { get; init; } = editValidator;
@@ -38,6 +42,7 @@ namespace Authorize.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToJson());
                 result = CustomErrors.GetRecordsFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -62,6 +67,7 @@ namespace Authorize.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToJson());
                 result = CustomErrors.GetRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -78,6 +84,7 @@ namespace Authorize.Controllers
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
 
@@ -95,6 +102,7 @@ namespace Authorize.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToJson());
                 result = CustomErrors.AddRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -110,16 +118,19 @@ namespace Authorize.Controllers
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
                 Permission item = dto.Adapt<Permission>();
                 _db.Permissions.Add(item);
+                _db.Save();
 
                 result = CustomResults.AddRecordOk(item.Id);
                 return StatusCode(result.StatusCode, result);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToJson());
                 result = CustomErrors.AddRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -135,10 +146,12 @@ namespace Authorize.Controllers
                 if (!check.IsValid)
                 {
                     result = CustomErrors.InvalidData(check.Errors);
+                    return StatusCode(result.StatusCode, result);
                 }
 
                 Permission item = dto.Adapt<Permission>();
                 bool isOk = _db.Permissions.Edit(item);
+                _db.Save();
 
                 if (isOk)
                 {
@@ -153,6 +166,7 @@ namespace Authorize.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToJson());
                 result = CustomErrors.EditRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }
@@ -166,6 +180,8 @@ namespace Authorize.Controllers
             try
             {
                 var isOk = _db.Permissions.Delete(id);
+                _db.Save();
+
                 if (isOk)
                 {
                     result = CustomResults.DeleteRecordOk();
@@ -178,6 +194,7 @@ namespace Authorize.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToJson());
                 result = CustomErrors.DeleteRecordFailed();
                 return StatusCode(result.StatusCode, result);
             }

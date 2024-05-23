@@ -20,7 +20,6 @@ public class EditPermissionValidator : AbstractValidator<EditPermissionDto>
             .NotNull();
 
         RuleFor(i => i.Method)
-            .NotEmpty()
             .NotNull();
     }
 
