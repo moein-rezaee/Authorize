@@ -55,7 +55,7 @@ namespace Authorize.Controllers
                 var found = _db.Permissions.Find(id);
                 if (found is null)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomErrors.RecordNotFound();
                 }
                 else
                 {
@@ -71,8 +71,7 @@ namespace Authorize.Controllers
             }
         }
 
-        [HttpPost]
-        [Route("[controller]/[action]")]
+        [HttpPost("Check")]
         public IActionResult Check(CheckPermissionDto dto)
         {
             Result result;
@@ -156,7 +155,7 @@ namespace Authorize.Controllers
                 }
                 else
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomErrors.RecordNotFound();
                 }
 
                 return StatusCode(result.StatusCode, result);
@@ -170,7 +169,7 @@ namespace Authorize.Controllers
         }
 
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public IActionResult Delete(Guid id)
         {
             Result result;
@@ -185,7 +184,7 @@ namespace Authorize.Controllers
                 }
                 else
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomErrors.RecordNotFound();
                 }
                 return StatusCode(result.StatusCode, result);
             }

@@ -49,7 +49,7 @@ namespace MyApp.Namespace
                 var found = _db.Resources.Find(id);
                 if (found is null)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomErrors.RecordNotFound();
                 }
                 else
                 {
@@ -115,7 +115,7 @@ namespace MyApp.Namespace
                 }
                 else
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomErrors.RecordNotFound();
                 }
 
                 return StatusCode(result.StatusCode, result);
@@ -129,7 +129,7 @@ namespace MyApp.Namespace
         }
 
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public IActionResult Delete(Guid id)
         {
             Result result;
@@ -139,7 +139,7 @@ namespace MyApp.Namespace
                 _db.Save();
                 if (isOk)
                 {
-                    result = CustomErrors.RecordNotFaound();
+                    result = CustomErrors.RecordNotFound();
                 }
                 else
                 {

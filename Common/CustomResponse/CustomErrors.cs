@@ -4,7 +4,7 @@ namespace Authorize.Common
 {
     public class CustomErrors
     {
-        public static Result RecordNotFaound(object? data = null) => new()
+        public static Result RecordNotFound(object? data = null) => new()
         {
             Message = new()
             {
